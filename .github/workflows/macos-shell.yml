@@ -1,24 +1,23 @@
-name: Interactive macOS GUI
+name: Fast macOS Shell Test
 
 on:
   workflow_dispatch:
 
 jobs:
   gui:
-    runs-on: macos-14   # Apple Silicon M1
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
 
-      - name: Enable VNC Screen Sharing
+      - name: Fast Install tmate
         run: |
-          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
-            -activate -configure -access -on \
-            -clientopts -setvnclegacy -vnclegacy yes \
-            -clientopts -setvncpw -vncpw yourpassword \
-            -restart -agent -privs -all
+          # This skips the 5-10 minute Homebrew update process
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          brew install tmate
 
       - name: Start tmate session
         uses: mxschmitt/action-tmate@v3
         with:
-          limit-access-to-actor: true
+
+          limit-access-to-actor: false
         timeout-minutes: 60
