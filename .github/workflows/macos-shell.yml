@@ -1,8 +1,8 @@
-name: macOS GUI (Intel)
+name: macOS GUI (ARM)
 on: workflow_dispatch
 jobs:
   shell:
-    runs-on: macos-13 # <--- CHANGED TO INTEL
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       
@@ -18,8 +18,8 @@ jobs:
 
       - name: Enable VNC & Set Password
         run: |
-          # On Intel, we can force a password for the runner user
-          sudo dscl . -passwd /Users/runner "" yourpassword123
+          # Use sysadminctl to bypass the "old password" requirement
+          sudo sysadminctl -resetPasswordFor runner -newPassword yourpassword123
           
           # Enable VNC
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
