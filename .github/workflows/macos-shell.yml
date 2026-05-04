@@ -1,8 +1,8 @@
-name: macOS via Ngrok (SSH Key)
+name: macOS GUI (Intel)
 on: workflow_dispatch
 jobs:
   shell:
-    runs-on: macos-13
+    runs-on: macos-13 # <--- CHANGED TO INTEL
     steps:
       - uses: actions/checkout@v4
       
@@ -12,16 +12,26 @@ jobs:
       - name: Setup SSH Key Access
         run: |
           mkdir -p ~/.ssh
-          # This tells the Mac to trust your specific computer's key
           echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtl1llZuZ0SlJiKp+x51oTDBp8LbppuQs3qd3U9iFrG" >> ~/.ssh/authorized_keys
           chmod 700 ~/.ssh
           chmod 600 ~/.ssh/authorized_keys
+
+      - name: Enable VNC & Set Password
+        run: |
+          # On Intel, we can force a password for the runner user
+          sudo dscl . -passwd /Users/runner "" yourpassword123
+          
+          # Enable VNC
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+            -activate -configure -access -on \
+            -clientopts -setvnclegacy -vnclegacy yes \
+            -clientopts -setvncpw -vncpw yourpassword123 \
+            -restart -agent -privs -all
 
       - name: Start Ngrok SSH Tunnel
         run: |
           ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
           ngrok tcp 22 --log=stdout > ngrok.log &
           sleep 5
-          echo "Connect using the URL below:"
           curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
           sleep 3600
