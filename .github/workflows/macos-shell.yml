@@ -1,34 +1,31 @@
-name: macOS GUI (ARM)
+name: macOS GUI (Intel Fix)
 on: workflow_dispatch
 jobs:
   shell:
-    runs-on: macos-14
+    runs-on: macos-12 # <--- Intel hardware = No Black Screen
     steps:
       - uses: actions/checkout@v4
       
       - name: Install Ngrok
         run: brew install ngrok/ngrok/ngrok
 
-      - name: Setup SSH Key Access
+      - name: Setup Access
         run: |
+          # 1. Setup SSH Key
           mkdir -p ~/.ssh
           echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtl1llZuZ0SlJiKp+x51oTDBp8LbppuQs3qd3U9iFrG" >> ~/.ssh/authorized_keys
-          chmod 700 ~/.ssh
-          chmod 600 ~/.ssh/authorized_keys
-
-      - name: Enable VNC & Set Password
-        run: |
-          # Use sysadminctl to bypass the "old password" requirement
-          sudo sysadminctl -resetPasswordFor runner -newPassword yourpassword123
           
-          # Enable VNC
+          # 2. Create VNC User (Password: vncpassword123)
+          sudo sysadminctl -addUser vncuser -fullName "VNC User" -password vncpassword123 -admin
+          
+          # 3. Enable VNC for this user
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
             -activate -configure -access -on \
             -clientopts -setvnclegacy -vnclegacy yes \
-            -clientopts -setvncpw -vncpw yourpassword123 \
-            -restart -agent -privs -all
+            -clientopts -setvncpw -vncpw vncpassword123 \
+            -restart -agent -privs -all -users vncuser
 
-      - name: Start Ngrok SSH Tunnel
+      - name: Start Tunnel
         run: |
           ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
           ngrok tcp 22 --log=stdout > ngrok.log &
