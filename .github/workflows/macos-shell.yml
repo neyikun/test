@@ -11,11 +11,10 @@ jobs:
 
       - name: Start Ngrok SSH Tunnel
         run: |
+          sudo dscl . -passwd /Users/runner yourpassword123
+          
           ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
-          # Start tunnel in background
           ngrok tcp 22 --log=stdout > ngrok.log &
           sleep 5
-          # Show the connection URL
           curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
-          # Keep the job running for 1 hour
           sleep 3600
