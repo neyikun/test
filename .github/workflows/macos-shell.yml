@@ -1,29 +1,31 @@
-name: macOS GUI (Intel Fix)
+name: macOS GUI Diagnostic
 on: workflow_dispatch
 jobs:
   shell:
-    runs-on: macos-12 # <--- Intel hardware = No Black Screen
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       
-      - name: Install Ngrok
-        run: brew install ngrok/ngrok/ngrok
-
-      - name: Setup Access
+      - name: Install Tools
         run: |
-          # 1. Setup SSH Key
+          brew install ngrok/ngrok/ngrok
+          # cliclick allows us to move the mouse via terminal
+          brew install cliclick 
+
+      - name: Setup Access & VNC
+        run: |
           mkdir -p ~/.ssh
           echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFtl1llZuZ0SlJiKp+x51oTDBp8LbppuQs3qd3U9iFrG" >> ~/.ssh/authorized_keys
           
-          # 2. Create VNC User (Password: vncpassword123)
-          sudo sysadminctl -addUser vncuser -fullName "VNC User" -password vncpassword123 -admin
+          # Force a password for the runner
+          sudo sysadminctl -resetPasswordFor runner -newPassword yourpassword123
           
-          # 3. Enable VNC for this user
+          # Enable VNC
           sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
             -activate -configure -access -on \
             -clientopts -setvnclegacy -vnclegacy yes \
-            -clientopts -setvncpw -vncpw vncpassword123 \
-            -restart -agent -privs -all -users vncuser
+            -clientopts -setvncpw -vncpw yourpassword123 \
+            -restart -agent -privs -all
 
       - name: Start Tunnel
         run: |
