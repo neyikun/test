@@ -1,16 +1,24 @@
-name: Interactive macOS Shell
+name: Interactive macOS GUI
 
 on:
   workflow_dispatch:
 
 jobs:
-  shell:
-    runs-on: macos-latest   # or macos-14 for Apple Silicon M1
+  gui:
+    runs-on: macos-14   # Apple Silicon M1
     steps:
       - uses: actions/checkout@v4
+
+      - name: Enable VNC Screen Sharing
+        run: |
+          sudo /System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Resources/kickstart \
+            -activate -configure -access -on \
+            -clientopts -setvnclegacy -vnclegacy yes \
+            -clientopts -setvncpw -vncpw yourpassword \
+            -restart -agent -privs -all
 
       - name: Start tmate session
         uses: mxschmitt/action-tmate@v3
         with:
-          limit-access-to-actor: true   # only your SSH keys can connect
-        timeout-minutes: 60             # session lasts up to 60 min
+          limit-access-to-actor: true
+        timeout-minutes: 60
