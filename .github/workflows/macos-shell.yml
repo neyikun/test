@@ -1,23 +1,21 @@
-name: Fast macOS Shell Test
-
-on:
-  workflow_dispatch:
-
+name: macOS via Ngrok
+on: workflow_dispatch
 jobs:
-  gui:
+  shell:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+      
+      - name: Install Ngrok
+        run: brew install ngrok/ngrok/ngrok
 
-      - name: Fast Install tmate
+      - name: Start Ngrok SSH Tunnel
         run: |
-          # This skips the 5-10 minute Homebrew update process
-          export HOMEBREW_NO_AUTO_UPDATE=1
-          brew install tmate
-
-      - name: Start tmate session
-        uses: mxschmitt/action-tmate@v3
-        with:
-
-          limit-access-to-actor: false
-        timeout-minutes: 60
+          ngrok config add-authtoken ${{ secrets.NGROK_AUTHTOKEN }}
+          # Start tunnel in background
+          ngrok tcp 22 --log=stdout > ngrok.log &
+          sleep 5
+          # Show the connection URL
+          curl -s http://localhost:4040/api/tunnels | jq -r '.tunnels[0].public_url'
+          # Keep the job running for 1 hour
+          sleep 3600
