@@ -1,0 +1,16 @@
+name: Interactive macOS Shell
+
+on:
+  workflow_dispatch:
+
+jobs:
+  shell:
+    runs-on: macos-latest   # or macos-14 for Apple Silicon M1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Start tmate session
+        uses: mxschmitt/action-tmate@v3
+        with:
+          limit-access-to-actor: true   # only your SSH keys can connect
+        timeout-minutes: 60             # session lasts up to 60 min
